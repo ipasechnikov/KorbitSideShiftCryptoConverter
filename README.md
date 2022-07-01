@@ -2,6 +2,8 @@
 
 A small console application to help you find best conversion rates for your crypto bought on [Korbit](https://www.korbit.co.kr/) exchange and convert it through [sideshift.ai](https://sideshift.ai/) exchange.
 
+Just in case if someone is worried, this app doesn't collect any data, it cannot use your money to buy or sell any crypto. It simply converts KRW into target crypto with a help of intermediate crypto. Nothing more, nothing less.
+
 ## Table of Contents
 
 - [KorbitSideShiftCryptoConverter](#korbitsideshiftcryptoconverter)
@@ -12,6 +14,13 @@ A small console application to help you find best conversion rates for your cryp
     - [Why sideshift.ai as exchange for conversion](#why-sideshiftai-as-exchange-for-conversion)
   - [Preview](#preview)
   - [Getting started](#getting-started)
+    - [Binaries](#binaries)
+    - [Building](#building)
+    - [Running](#running)
+    - [Available coins](#available-coins)
+    - [Modifying](#modifying)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## ⚠️ Disclaimer
 
@@ -46,6 +55,8 @@ You also have to follow Travel Rule for your own wallets, but applying for scree
 
 sideshift.ai is quite easy to use and has no KYC (Know You Customer) policy.
 
+There are other exchanges that have no KYC policy, but they seem to have higher fees.
+
 ## Preview
 
 That's what you get. Not bad, huh?
@@ -53,3 +64,74 @@ That's what you get. Not bad, huh?
 ![2022-07-01 12_05_30-Windows PowerShell](https://user-images.githubusercontent.com/17357759/176815654-c4b288f4-5e81-4fa2-934b-ca4dcd727734.png)
 
 ## Getting started
+
+It's a cross-platform application that you can run on any platform that has .NET 6 runtime available.
+
+### Binaries
+
+In most cases you should just grab the latest available release.
+You can find pre-build binaries for Windows, Mac and Linux in [Releases](https://github.com/ipasechnikov/KorbitSideShiftCryptoConverter/releases) section.
+
+Don't forget to make sure that you have .NET Runtime installed on your machine. You can get latest .NET Runtime from [Microsoft](https://www.microsoft.com/net/download/).
+
+### Building
+
+If you planning to build application from source code then you have to install .NET SDK at first. It's available for download over [here](https://www.microsoft.com/net/download/).
+
+To build an app, simply run the following command from the root of the solution:
+
+```console
+dotnet build
+```
+
+### Running
+
+Running process can't get any simpler than this:
+
+1. Input how much money in KRW you want to spend on your crypto. That's the money that you buy crypto on Korbit with. You can format it with commas for example `1,000,000` or `1,000,000,000`.
+2. Select your target crypto. That's the crypto you want to convert to and put it in your wallet at the end of the process.
+
+Or you can skip input for both of these values and use default value by pressing Enter.
+
+After you inputted all the data the app will start to convert your money in a loop with a frequency interval of 5 seconds. It will request current exchange rates from Korbit and sideshift.ai via their public APIs and print a table showing how much of your target coin you'll get in case you convert though one or another coin.
+
+There are not much underlying checks going on. In case of bad user input data, app will simply crash. To stop an app you can press Ctrl+C. It's wild, I know.
+
+### Available coins
+
+There are not many coins available in the app, the reasons for that are withdrawal fees and availability on both exchanges.
+
+- sideshift.ai has quite a restricted list of support coins
+- There are quite a few coins that have reasonable withdrawal fees
+
+This coin is basically the reason why this tool was create in the first place, it has unreasonable high withdrawal fees. That's why this coin is selected by default.
+
+- BCH
+
+These coins are good as intermediate coins for conversion. They have quite a low withdrawal fee.
+
+- XLM
+- XRP
+- ADA
+- AVAX
+
+These 2 stablecoins are not reasonable for now, but if the price of other coins goes up, stablecoin can provide lesser fees.
+
+- DAI
+- USDC
+
+### Modifying
+
+You can freely modify the code and add your own coins, change fees, etc. You can even add your own exchange and use its API.
+
+## Contributing
+
+I don't think that this project is good for contributing, but if you have any idea, proposal or issues, please open an issue or create a pull request.
+
+It shouldn't be much of an issue to understand most of the code, but if you have any problems, please open an issue or create a pull request.
+
+Code quality probably is not the best. It's a small project written in a few hours in my free time. It utilizes a .NET 6 [new console app template](https://aka.ms/new-console-template), so Program.cs file looks like some scripting language.
+
+## License
+
+The project is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
