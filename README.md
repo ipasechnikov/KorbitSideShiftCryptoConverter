@@ -6,6 +6,8 @@ A small console application to help you find best conversion rates for your cryp
 
 Just in case if someone is worried, this app doesn't collect any data, it cannot use your money to buy or sell any crypto. It simply converts KRW into target crypto with a help of intermediate crypto. Nothing more, nothing less.
 
+All buy, sell, withdrawal operations are done by user manually. You have to buy coins on Korbit, withdraw them to your wallet and then convert them on sideshift.ai exchange. This tools only shows conversion rates in real-time.
+
 ## Table of Contents
 
 - [KorbitSideShiftCryptoConverter](#korbitsideshiftcryptoconverter)
