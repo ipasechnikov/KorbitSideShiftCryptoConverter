@@ -2,24 +2,72 @@ name: .NET
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+    paths-ignore:
+      - 'README.md'
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        configuration: [Release]
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
+
     - name: Restore dependencies
       run: dotnet restore
+
     - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet build --no-restore --configuration Release --output bin
+
+    - name: Get release version from tag name
+      if: startsWith(github.ref, 'refs/tags/')
+      id: tag
+      uses: dawidd6/action-get-tag@v1
+      with:
+        # Strip `v` prefix
+        strip_v: true
+
+    - name: Set RELEASE_VERSION env variable
+      if: startsWith(github.ref, 'refs/tags/')
+      run: echo ("RELEASE_VERSION=" + "${{ steps.tag.outputs.tag }}") >> $env:GITHUB_ENV
+
+    - name: Zip Release environment variables
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        echo "ZIP_RELEASE_FILENAME=KorbitSideShiftConverter-${{ env.RELEASE_VERSION }}-${{ runner.os }}.zip" >> $env:GITHUB_ENV
+
+    - name: Zip Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: TheDoctor0/zip-release@0.6.2
+      with:
+        type: zip
+        filename: ${{ env.ZIP_RELEASE_FILENAME }}
+        directory: bin
+        exclusions: "*.pdb *.xml"
+
+    - name: Automatic GH Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v0.1.14
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: |
+          ${{ env.ZIP_RELEASE_FILENAME }}
+        name: Release ${{ env.RELEASE_VERSION }}
+        generate_release_notes: true
