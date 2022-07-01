@@ -1,0 +1,201 @@
+﻿// See https://aka.ms/new-console-template for more information
+
+using System.Diagnostics;
+using System.Globalization;
+
+using Newtonsoft.Json;
+
+// How many milliseconds wait till next conversion
+const int ConversionFrequencyMilliseconds = 5000;
+
+// Global HTTP client used by every other method
+HttpClient httpClient = new();
+
+// Symbols mapping from Korbit exchange
+// https://exchange.korbit.co.kr/faq/articles/?id=5SrSC3yggkWhcSL0O1KSz4
+var korbitSymbols = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+{
+    { "BTC", "btc_krw" },
+    { "BCH", "bch_krw" },
+    { "XLM", "xlm_krw" },
+    { "XRP", "xrp_krw" },
+    { "ADA", "ada_krw" },
+    { "DAI", "dai_krw" },
+    { "USDC", "usdc_krw" },
+    { "AVAX", "avax_krw" },
+};
+
+// Korbit fees when you withdraw crypto from exchange
+// https://exchange.korbit.co.kr/faq/articles/?id=5SrSC3yggkWhcSL0O1KSz4
+var korbitWithdrawalFees = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+{
+    { "BTC", 0.001m },
+    { "BCH", 0.001m },
+    { "XLM", 0.01m },
+    { "XRP", 1m },
+    { "ADA", 0.5m },
+    { "DAI", 20m },
+    { "USDC", 28m },
+    { "AVAX", 0.01m },
+};
+
+// Symbols mapping from sideshift.ai exchange
+// https://sideshift.ai/
+var sideShiftSymbols = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+{
+    { "BTC", "btc-btc" },
+    { "BCH", "bch-bch" },
+    { "XLM", "xlm-xlm" },
+    { "XRP", "xrp-xrp" },
+    { "ADA", "ada-ada" },
+    { "DAI", "dai-ethereum" },
+    { "USDC", "usdc-ethereum" },
+    { "AVAX", "avax-avax" },
+};
+
+// Check that both exchanges have same symbols
+Trace.Assert(
+    korbitSymbols.Keys.ToHashSet().SequenceEqual(sideShiftSymbols.Keys.ToHashSet())
+);
+
+// Check that for each symbol there is a corresponding withdrawal fee for Korbit exchange
+Trace.Assert(
+    korbitSymbols.Keys.ToHashSet().SequenceEqual(korbitWithdrawalFees.Keys.ToHashSet())
+);
+
+async Task<decimal> getKorbitPrice(string coinSymbol)
+{
+    // Korbit API
+    // https://apidocs.korbit.co.kr/
+
+    var korbitSymbol = korbitSymbols![coinSymbol];
+
+    var korbitUrl = $"https://api.korbit.co.kr/v1/ticker/detailed?currency_pair={korbitSymbol}";
+    var korbitResponse = await httpClient.GetAsync(korbitUrl);
+
+    var korbitJson = await korbitResponse.Content.ReadAsStringAsync();
+    var korbitTickerDetailed = JsonConvert.DeserializeObject<KorbitTickerDetailed>(korbitJson);
+
+    return korbitTickerDetailed!.Last;
+}
+
+async Task<decimal> getSideShiftRate(string coinSymbolSrc, string coinSymbolDst)
+{
+    // sideshift.ai API
+    // https://documenter.getpostman.com/view/6895769/TWDZGvjd#f7af3db9-0882-4a05-801e-ed4b85641f7f
+
+    var sideShiftSymbolSrc = sideShiftSymbols![coinSymbolSrc];
+    var sideShiftSymbolDst = sideShiftSymbols![coinSymbolDst];
+
+    var sideShiftUrl = $"https://sideshift.ai/api/v2/pair/{sideShiftSymbolSrc}/{sideShiftSymbolDst}";
+    var sideShiftResponse = await httpClient.GetAsync(sideShiftUrl);
+
+    var sideShiftJson = await sideShiftResponse.Content.ReadAsStringAsync();
+    var sideShiftPair = JsonConvert.DeserializeObject<SideShiftPair>(sideShiftJson);
+
+    return sideShiftPair!.Rate;
+}
+
+async Task<decimal> getTargetCoinAmount(decimal money, string intermediateCoin, string targetCoin)
+{
+    var korbitPrice = await getKorbitPrice(intermediateCoin);
+    var korbitFee = korbitWithdrawalFees[intermediateCoin];
+    var sideShiftRate = await getSideShiftRate(intermediateCoin, targetCoin);
+
+    var finalAmount = (money / korbitPrice - korbitFee) * sideShiftRate;
+
+    return finalAmount;
+}
+
+Task<IEnumerable<(string symbol, decimal amount)>> getAllTargetCoinAmounts(decimal money, string targetCoin)
+{
+    return Task.WhenAll(
+        korbitSymbols.Keys
+            .Where(symbol => symbol != targetCoin)
+            .Select(async intermediateCoin => (
+                symbol: intermediateCoin,
+                amount: await getTargetCoinAmount(money, intermediateCoin, targetCoin)
+            ))
+    ).ContinueWith(
+        t => t.Result.OrderByDescending(
+            sa => sa.amount
+        ).AsEnumerable()
+    );
+}
+
+void printHorizontalLine()
+{
+    Console.WriteLine(new string('-', Console.WindowWidth));
+}
+
+void printAvailableCoins()
+{
+    var availableCoinsStr = string.Join(", ", korbitSymbols.Keys);
+    Console.WriteLine($"\nAvailable coins: {availableCoinsStr}");
+}
+
+// Input amount of Korean Won you want to convert to crypto
+Console.Write("Please enter amount of money you are spending in KRW (default: 200,000 KRW): ");
+var moneyStr = Console.ReadLine();
+if (string.IsNullOrEmpty(moneyStr))
+    moneyStr = "200,000";
+
+var money = decimal.Parse(moneyStr, NumberStyles.Any);
+
+printAvailableCoins();
+
+// Coin you want to acquire at the end of all conversions
+Console.Write("Please enter coin name (default: BTC): ");
+var targetCoin = Console.ReadLine()!.ToUpper();
+if (string.IsNullOrEmpty(targetCoin))
+    targetCoin = "BTC";
+
+Trace.Assert(sideShiftSymbols.ContainsKey(targetCoin));
+Trace.Assert(korbitSymbols.ContainsKey(targetCoin));
+
+Console.WriteLine("\nStarting conversion loop...\n");
+
+// Infinite loop until Ctrl+C is pressed
+for (var i = 1; ; i++)
+{
+    var delayTask = Task.Delay(ConversionFrequencyMilliseconds);
+    var finalAmounts = await getAllTargetCoinAmounts(money, targetCoin);
+
+    var korbitPrice = await getKorbitPrice(targetCoin);
+    var korbitFee = korbitWithdrawalFees[targetCoin];
+
+    // Print header
+    printHorizontalLine();
+    Console.WriteLine($"Conversion #{i} ({DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")})");
+    printHorizontalLine();
+
+    Console.WriteLine($"Converting {money:N0} KRW into {targetCoin}\n");
+
+    // Print price if you buy your coin directly from Korbit
+    var korbitExchangeKeep = money / korbitPrice;
+    var korbitExchangeWithdrawl = korbitExchangeKeep - korbitFee;
+    Console.WriteLine($"Directly from Korbit (send to wallet) KRW -> {targetCoin} : {korbitExchangeWithdrawl} {targetCoin}");
+    Console.WriteLine($"Directly from Korbit (keep on Korbit) KRW -> {targetCoin} : {korbitExchangeKeep} {targetCoin}\n");
+
+    // Print all prices
+    Console.WriteLine("sideshift.io");
+    foreach ((var symbol, var amount) in finalAmounts)
+    {
+        var coinDiff = amount - korbitExchangeKeep;
+        var krwDiff = coinDiff * korbitPrice;
+
+        Console.WriteLine($"KRW -> {symbol,5} -> {targetCoin} : {amount} {targetCoin} (diff with Korbit: {krwDiff,7:N0} KRW)");
+    }
+
+    // Print best coin and how much of target coin you'll get if you convert through this coin
+    printHorizontalLine();
+    var best = finalAmounts.First();
+    Console.WriteLine($"Best value: {best.symbol} -> {best.amount} {targetCoin}");
+
+    // Print footer
+    printHorizontalLine();
+
+    // Wait for next iteration
+    Console.WriteLine($"Waiting {ConversionFrequencyMilliseconds / 1000.0:N1} sec for next conversion...\n");
+    await delayTask;
+}

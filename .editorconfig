@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# RCS0045: Use linefeed as new line.
+dotnet_diagnostic.RCS0045.severity = silent
