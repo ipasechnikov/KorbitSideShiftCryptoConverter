@@ -1,5 +1,7 @@
 # KorbitSideShiftCryptoConverter
 
+[![.NET](https://github.com/ipasechnikov/KorbitSideShiftCryptoConverter/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ipasechnikov/KorbitSideShiftCryptoConverter/actions/workflows/dotnet.yml)
+
 A small console application to help you find best conversion rates for your crypto bought on [Korbit](https://www.korbit.co.kr/) exchange and convert it through [sideshift.ai](https://sideshift.ai/) exchange.
 
 Just in case if someone is worried, this app doesn't collect any data, it cannot use your money to buy or sell any crypto. It simply converts KRW into target crypto with a help of intermediate crypto. Nothing more, nothing less.
