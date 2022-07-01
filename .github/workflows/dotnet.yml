@@ -20,7 +20,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         configuration: [Release]
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v3
@@ -34,24 +34,22 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --no-restore --configuration Release --output bin
+      run: dotnet build --no-restore --configuration ${{ matrix.configuration }} --output ${{ matrix.configuration }}
 
     - name: Get release version from tag name
       if: startsWith(github.ref, 'refs/tags/')
-      id: tag
+      id: release-version
       uses: dawidd6/action-get-tag@v1
       with:
         # Strip `v` prefix
         strip_v: true
 
-    - name: Set RELEASE_VERSION env variable
-      if: startsWith(github.ref, 'refs/tags/')
-      run: echo ("RELEASE_VERSION=" + "${{ steps.tag.outputs.tag }}") >> $env:GITHUB_ENV
-
-    - name: Zip Release environment variables
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        echo "ZIP_RELEASE_FILENAME=KorbitSideShiftConverter-${{ env.RELEASE_VERSION }}-${{ runner.os }}.zip" >> $env:GITHUB_ENV
+    - name: Set environment variables
+      uses: allenevans/set-env@v2.0.0
+      with:
+        RELEASE_VERSION: ${{ steps.release-version.outputs.tag }}
+        ZIP_RELEASE_FILENAME: KorbitSideShiftConverter-${{ steps.release-version.outputs.tag }}-${{ runner.os }}.zip
+        ZIP_RELEASE_FILEPATH: ${{ matrix.configuration }}/KorbitSideShiftConverter-${{ steps.release-version.outputs.tag }}-${{ runner.os }}.zip
 
     - name: Zip Release
       if: startsWith(github.ref, 'refs/tags/')
@@ -59,7 +57,7 @@ jobs:
       with:
         type: zip
         filename: ${{ env.ZIP_RELEASE_FILENAME }}
-        directory: bin
+        directory: ${{ matrix.configuration }}
         exclusions: "*.pdb *.xml"
 
     - name: Automatic GH Release
@@ -68,6 +66,6 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |
-          ${{ env.ZIP_RELEASE_FILENAME }}
+          ${{ env.ZIP_RELEASE_FILEPATH }}
         name: Release ${{ env.RELEASE_VERSION }}
         generate_release_notes: true
