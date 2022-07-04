@@ -188,7 +188,8 @@ async Task<IEnumerable<(string symbol, decimal amount)>> getAllTargetCoinAmounts
 
 void printHorizontalLine()
 {
-    Console.WriteLine(new string('-', Console.WindowWidth));
+    // -1 is to account for the trailing newline and prevent terminal from wrapping a line
+    Console.WriteLine(new string('-', Console.WindowWidth - 1));
 }
 
 void printAvailableCoins()
