@@ -95,7 +95,7 @@ Running process can't get any simpler than this:
 
 Or you can skip input for both of these values and use default value by pressing Enter.
 
-After you inputted all the data the app will start to convert your money in a loop with a frequency interval of 5 seconds. It will request current exchange rates from Korbit and sideshift.ai via their public APIs and print a table showing how much of your target coin you'll get in case you convert though one or another coin.
+After you inputted all the data the app will start to convert your money in a loop with a frequency interval of 10 seconds. It will request current exchange rates from Korbit and sideshift.ai via their public APIs and print a table showing how much of your target coin you'll get in case you convert though one or another coin.
 
 There are not much underlying checks going on. In case of bad user input data, app will simply crash. To stop an app you can press Ctrl+C. It's wild, I know.
 

@@ -15,7 +15,7 @@ httpClient.Timeout = TimeSpan.FromMilliseconds(5000);
 
 // Symbols mapping from Korbit exchange
 // https://exchange.korbit.co.kr/faq/articles/?id=5SrSC3yggkWhcSL0O1KSz4
-var korbitSymbols = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+Dictionary<string, string> korbitSymbols = new(StringComparer.OrdinalIgnoreCase)
 {
     { "BTC", "btc_krw" },
     { "BCH", "bch_krw" },
@@ -38,7 +38,7 @@ var korbitSymbols = new Dictionary<string, string>(StringComparer.OrdinalIgnoreC
 
 // Korbit fees when you withdraw crypto from exchange
 // https://exchange.korbit.co.kr/faq/articles/?id=5SrSC3yggkWhcSL0O1KSz4
-var korbitWithdrawalFees = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+Dictionary<string, decimal> korbitWithdrawalFees = new(StringComparer.OrdinalIgnoreCase)
 {
     { "BTC", 0.001m },
     { "BCH", 0.001m },
@@ -61,7 +61,7 @@ var korbitWithdrawalFees = new Dictionary<string, decimal>(StringComparer.Ordina
 
 // Symbols mapping from sideshift.ai exchange
 // https://sideshift.ai/
-var sideShiftSymbols = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+Dictionary<string, string> sideShiftSymbols = new(StringComparer.OrdinalIgnoreCase)
 {
     { "BTC", "btc-btc" },
     { "BCH", "bch-bch" },
@@ -97,15 +97,44 @@ async Task<decimal> getKorbitPrice(string coinSymbol)
     // Korbit API
     // https://apidocs.korbit.co.kr/
 
-    var korbitSymbol = korbitSymbols![coinSymbol];
+    var korbitSymbol = korbitSymbols[coinSymbol];
 
     var korbitUrl = $"https://api.korbit.co.kr/v1/ticker/detailed?currency_pair={korbitSymbol}";
     var korbitResponse = await httpClient.GetAsync(korbitUrl);
 
     var korbitJson = await korbitResponse.Content.ReadAsStringAsync();
-    var korbitTickerDetailed = JsonConvert.DeserializeObject<KorbitTickerDetailed>(korbitJson);
+    KorbitTickerDetailed korbitTickerDetailed = JsonConvert.DeserializeObject<KorbitTickerDetailed>(korbitJson)!;
+    Trace.Assert(korbitTickerDetailed is not null);
 
-    return korbitTickerDetailed!.Last;
+    return korbitTickerDetailed.Last;
+}
+
+async Task<IDictionary<string, decimal>> getKorbitPrices()
+{
+    var prices = new Dictionary<string, decimal>();
+
+    var korbitUrl = "https://api.korbit.co.kr/v1/ticker/detailed/all";
+    var korbitResponse = await httpClient.GetAsync(korbitUrl);
+
+    var korbitJson = await korbitResponse.Content.ReadAsStringAsync();
+    IDictionary<string, KorbitTickerDetailed> korbitTickerDetailedAll = JsonConvert.DeserializeObject<Dictionary<string, KorbitTickerDetailed>>(korbitJson)!;
+    Trace.Assert(korbitTickerDetailedAll is not null);
+
+    foreach ((var korbitSymbol, var korbitPair) in korbitSymbols)
+    {
+        if (!korbitTickerDetailedAll.TryGetValue(korbitPair, out var korbitTickerDetailed))
+            throw new Exception($"Korbit API returned no data for {korbitSymbol}");
+
+        prices[korbitSymbol] = korbitTickerDetailed.Last;
+    }
+
+    foreach (var coinSymbol in korbitSymbols.Keys)
+    {
+        var price = await getKorbitPrice(coinSymbol);
+        prices[coinSymbol] = price;
+    }
+
+    return prices;
 }
 
 async Task<decimal> getSideShiftRate(string coinSymbolSrc, string coinSymbolDst)
@@ -113,21 +142,24 @@ async Task<decimal> getSideShiftRate(string coinSymbolSrc, string coinSymbolDst)
     // sideshift.ai API
     // https://documenter.getpostman.com/view/6895769/TWDZGvjd#f7af3db9-0882-4a05-801e-ed4b85641f7f
 
-    var sideShiftSymbolSrc = sideShiftSymbols![coinSymbolSrc];
-    var sideShiftSymbolDst = sideShiftSymbols![coinSymbolDst];
+    var sideShiftSymbolSrc = sideShiftSymbols[coinSymbolSrc];
+    var sideShiftSymbolDst = sideShiftSymbols[coinSymbolDst];
 
     var sideShiftUrl = $"https://sideshift.ai/api/v2/pair/{sideShiftSymbolSrc}/{sideShiftSymbolDst}";
     var sideShiftResponse = await httpClient.GetAsync(sideShiftUrl);
 
     var sideShiftJson = await sideShiftResponse.Content.ReadAsStringAsync();
-    var sideShiftPair = JsonConvert.DeserializeObject<SideShiftPair>(sideShiftJson);
+    SideShiftPair sideShiftPair = JsonConvert.DeserializeObject<SideShiftPair>(sideShiftJson)!;
+    Trace.Assert(sideShiftPair is not null);
 
-    return sideShiftPair!.Rate;
+    return sideShiftPair.Rate;
 }
 
-async Task<decimal> getTargetCoinAmount(decimal money, string intermediateCoin, string targetCoin)
+async Task<decimal> getTargetCoinAmount(decimal money, string intermediateCoin, string targetCoin, decimal korbitPrice = 0)
 {
-    var korbitPrice = await getKorbitPrice(intermediateCoin);
+    if (korbitPrice == 0)
+        korbitPrice = await getKorbitPrice(intermediateCoin);
+
     var korbitFee = korbitWithdrawalFees[intermediateCoin];
     var sideShiftRate = await getSideShiftRate(intermediateCoin, targetCoin);
 
@@ -136,20 +168,22 @@ async Task<decimal> getTargetCoinAmount(decimal money, string intermediateCoin, 
     return finalAmount;
 }
 
-Task<IEnumerable<(string symbol, decimal amount)>> getAllTargetCoinAmounts(decimal money, string targetCoin)
+
+async Task<IEnumerable<(string symbol, decimal amount)>> getAllTargetCoinAmounts(decimal money, string targetCoin)
 {
-    return Task.WhenAll(
+    IDictionary<string, decimal> korbitPrices = await getKorbitPrices();
+
+    return await Task.WhenAll(
         korbitSymbols.Keys
             .Where(symbol => symbol != targetCoin)
             .Select(async intermediateCoin => (
                 symbol: intermediateCoin,
-                amount: await getTargetCoinAmount(money, intermediateCoin, targetCoin)
+                amount: await getTargetCoinAmount(money, intermediateCoin, targetCoin, korbitPrices[intermediateCoin])
             ))
     ).ContinueWith(
         t => t.Result.OrderByDescending(
             sa => sa.amount
-        ).AsEnumerable()
-    );
+    ).AsEnumerable());
 }
 
 void printHorizontalLine()
@@ -159,7 +193,7 @@ void printHorizontalLine()
 
 void printAvailableCoins()
 {
-    var availableCoinsStr = string.Join(", ", korbitSymbols.Keys);
+    var availableCoinsStr = string.Join(", ", korbitSymbols.Keys.OrderBy(s => s));
     Console.WriteLine($"\nAvailable coins: {availableCoinsStr}");
 }
 
@@ -175,7 +209,7 @@ printAvailableCoins();
 
 // Coin you want to acquire at the end of all conversions
 Console.Write("Please enter coin name (default: BTC): ");
-var targetCoin = Console.ReadLine()!.ToUpper();
+var targetCoin = Console.ReadLine().ToUpper();
 if (string.IsNullOrEmpty(targetCoin))
     targetCoin = "BTC";
 
