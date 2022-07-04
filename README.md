@@ -112,18 +112,18 @@ This coin is basically the reason why this tool was create in the first place, i
 
 These coins are good as intermediate coins for conversion. They have quite a low withdrawal fee.
 
+- ADA
+- AVAX
+- AXS
+- COMP
+- DOGE
+- FTM
+- MATIC
+- SHIB
+- SOL
 - XLM
 - XRP
-- ADA
-- SOL
-- FTM
-- AXS
 - YFI
-- DOGE
-- SHIB
-- COMP
-- AVAX
-- MATIC
 
 These 2 stablecoins are not reasonable for now, but if the price of other coins goes up, stablecoin can provide lesser fees.
 
