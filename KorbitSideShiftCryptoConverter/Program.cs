@@ -6,10 +6,12 @@ using System.Globalization;
 using Newtonsoft.Json;
 
 // How many milliseconds wait till next conversion
-const int ConversionFrequencyMilliseconds = 5000;
+const int ConversionFrequencyMilliseconds = 10000;
 
 // Global HTTP client used by every other method
 HttpClient httpClient = new();
+httpClient.Timeout = TimeSpan.FromMilliseconds(5000);
+
 
 // Symbols mapping from Korbit exchange
 // https://exchange.korbit.co.kr/faq/articles/?id=5SrSC3yggkWhcSL0O1KSz4
@@ -20,9 +22,18 @@ var korbitSymbols = new Dictionary<string, string>(StringComparer.OrdinalIgnoreC
     { "XLM", "xlm_krw" },
     { "XRP", "xrp_krw" },
     { "ADA", "ada_krw" },
+    { "SOL", "sol_krw" },
+    { "FTM", "ftm_krw" },
+    { "AXS", "axs_krw" },
+    { "YFI", "yfi_krw" },
+    { "DOGE", "doge_krw" },
+    { "SHIB", "shib_krw" },
+    { "COMP", "comp_krw" },
+    { "AVAX", "avax_krw" },
+    { "MATIC", "matic_krw" },
+
     { "DAI", "dai_krw" },
     { "USDC", "usdc_krw" },
-    { "AVAX", "avax_krw" },
 };
 
 // Korbit fees when you withdraw crypto from exchange
@@ -34,9 +45,18 @@ var korbitWithdrawalFees = new Dictionary<string, decimal>(StringComparer.Ordina
     { "XLM", 0.01m },
     { "XRP", 1m },
     { "ADA", 0.5m },
+    { "SOL", 0.01m },
+    { "FTM", 10m },
+    { "AXS", 0.7m },
+    { "YFI", 0.001m },
+    { "DOGE", 20m },
+    { "SHIB", 200_000m },
+    { "COMP", 0.07m },
+    { "AVAX", 0.01m },
+    { "MATIC", 15m },
+
     { "DAI", 20m },
     { "USDC", 28m },
-    { "AVAX", 0.01m },
 };
 
 // Symbols mapping from sideshift.ai exchange
@@ -48,9 +68,18 @@ var sideShiftSymbols = new Dictionary<string, string>(StringComparer.OrdinalIgno
     { "XLM", "xlm-xlm" },
     { "XRP", "xrp-xrp" },
     { "ADA", "ada-ada" },
+    { "SOL", "sol-sol" },
+    { "FTM", "ftm-ftm" },
+    { "AXS", "axs-ethereum" },
+    { "YFI", "yfi-ethereum" },
+    { "DOGE", "doge-doge" },
+    { "SHIB", "shib-ethereum" },
+    { "COMP", "comp-ethereum" },
+    { "AVAX", "avax-avax" },
+    { "MATIC", "matic-ethereum" },
+
     { "DAI", "dai-ethereum" },
     { "USDC", "usdc-ethereum" },
-    { "AVAX", "avax-avax" },
 };
 
 // Check that both exchanges have same symbols
