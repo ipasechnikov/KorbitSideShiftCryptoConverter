@@ -8,6 +8,9 @@ using Newtonsoft.Json;
 // How many milliseconds wait till next conversion
 const int ConversionFrequencyMilliseconds = 10000;
 
+// How much of KRW to convert
+const decimal DefaultConversionAmount = 200_000;
+
 // Global HTTP client used by every other method
 HttpClient httpClient = new();
 
@@ -219,12 +222,9 @@ void printAvailableCoins()
 }
 
 // Input amount of Korean Won you want to convert to crypto
-Console.Write("Please enter amount of money you are spending in KRW (default: 200,000 KRW): ");
+Console.Write($"Please enter amount of money you are spending in KRW (default: {DefaultConversionAmount:N0} KRW): ");
 var moneyStr = Console.ReadLine();
-if (string.IsNullOrEmpty(moneyStr))
-    moneyStr = "200,000";
-
-var money = decimal.Parse(moneyStr, NumberStyles.Any);
+var money = !string.IsNullOrEmpty(moneyStr) ? decimal.Parse(moneyStr, NumberStyles.Any) : DefaultConversionAmount;
 
 printAvailableCoins();
 
