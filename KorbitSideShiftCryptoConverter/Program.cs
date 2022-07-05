@@ -10,8 +10,6 @@ const int ConversionFrequencyMilliseconds = 10000;
 
 // Global HTTP client used by every other method
 HttpClient httpClient = new();
-httpClient.Timeout = TimeSpan.FromMilliseconds(5000);
-
 
 // Symbols mapping from Korbit exchange
 // https://exchange.korbit.co.kr/faq/articles/?id=5SrSC3yggkWhcSL0O1KSz4
@@ -104,8 +102,6 @@ async Task<decimal> getKorbitPrice(string coinSymbol)
 
     var korbitJson = await korbitResponse.Content.ReadAsStringAsync();
     KorbitTickerDetailed korbitTickerDetailed = JsonConvert.DeserializeObject<KorbitTickerDetailed>(korbitJson)!;
-    Trace.Assert(korbitTickerDetailed is not null);
-
     return korbitTickerDetailed.Last;
 }
 
@@ -118,7 +114,6 @@ async Task<IDictionary<string, decimal>> getKorbitPrices()
 
     var korbitJson = await korbitResponse.Content.ReadAsStringAsync();
     IDictionary<string, KorbitTickerDetailed> korbitTickerDetailedAll = JsonConvert.DeserializeObject<Dictionary<string, KorbitTickerDetailed>>(korbitJson)!;
-    Trace.Assert(korbitTickerDetailedAll is not null);
 
     foreach ((var korbitSymbol, var korbitPair) in korbitSymbols)
     {
@@ -137,32 +132,50 @@ async Task<IDictionary<string, decimal>> getKorbitPrices()
     return prices;
 }
 
-async Task<decimal> getSideShiftRate(string coinSymbolSrc, string coinSymbolDst)
+async Task<decimal> getSideShiftRate(string depositCoin, string settleCoin)
 {
     // sideshift.ai API
     // https://documenter.getpostman.com/view/6895769/TWDZGvjd#f7af3db9-0882-4a05-801e-ed4b85641f7f
 
-    var sideShiftSymbolSrc = sideShiftSymbols[coinSymbolSrc];
-    var sideShiftSymbolDst = sideShiftSymbols[coinSymbolDst];
+    var sideShiftDepositCoin = sideShiftSymbols[depositCoin];
+    var sideshiftSettleCoin = sideShiftSymbols[settleCoin];
 
-    var sideShiftUrl = $"https://sideshift.ai/api/v2/pair/{sideShiftSymbolSrc}/{sideShiftSymbolDst}";
+    var sideShiftUrl = $"https://sideshift.ai/api/v2/pair/{sideShiftDepositCoin}/{sideshiftSettleCoin}";
     var sideShiftResponse = await httpClient.GetAsync(sideShiftUrl);
 
     var sideShiftJson = await sideShiftResponse.Content.ReadAsStringAsync();
     SideShiftPair sideShiftPair = JsonConvert.DeserializeObject<SideShiftPair>(sideShiftJson)!;
-    Trace.Assert(sideShiftPair is not null);
 
     return sideShiftPair.Rate;
 }
 
-async Task<decimal> getTargetCoinAmount(decimal money, string intermediateCoin, string targetCoin, decimal korbitPrice = 0)
+async Task<IDictionary<string, decimal>> getSideShiftRates(string settleCoin)
+{
+    var sideShiftPairsStr = string.Join(",", sideShiftSymbols.Values);
+    var sideShiftUrl = $"https://sideshift.ai/api/v2/pairs?pairs={sideShiftPairsStr}";
+
+    return await Task.WhenAll(
+        sideShiftSymbols
+            .Where(kv => kv.Key != settleCoin)
+            .Select(async kv => (
+                depositCoin: kv.Key,
+                rate: await getSideShiftRate(kv.Key, settleCoin)
+            ))
+    ).ContinueWith(t => t.Result.ToDictionary(
+        t => t.depositCoin,
+        t => t.rate)
+    );
+}
+
+async Task<decimal> getTargetCoinAmount(decimal money, string intermediateCoin, string targetCoin, decimal korbitPrice = 0, decimal sideShiftRate = 0)
 {
     if (korbitPrice == 0)
         korbitPrice = await getKorbitPrice(intermediateCoin);
 
-    var korbitFee = korbitWithdrawalFees[intermediateCoin];
-    var sideShiftRate = await getSideShiftRate(intermediateCoin, targetCoin);
+    if (sideShiftRate == 0)
+        sideShiftRate = await getSideShiftRate(intermediateCoin, targetCoin);
 
+    var korbitFee = korbitWithdrawalFees[intermediateCoin];
     var finalAmount = (money / korbitPrice - korbitFee) * sideShiftRate;
 
     return finalAmount;
@@ -171,14 +184,21 @@ async Task<decimal> getTargetCoinAmount(decimal money, string intermediateCoin, 
 
 async Task<IEnumerable<(string symbol, decimal amount)>> getAllTargetCoinAmounts(decimal money, string targetCoin)
 {
-    IDictionary<string, decimal> korbitPrices = await getKorbitPrices();
+    var korbitPricesTask = getKorbitPrices();
+    var sideShiftRatesTask = getSideShiftRates(targetCoin);
+    await Task.WhenAll(korbitPricesTask, sideShiftRatesTask);
+
+    IDictionary<string, decimal> korbitPrices = korbitPricesTask.Result;
+    IDictionary<string, decimal> sideShiftRates = sideShiftRatesTask.Result;
 
     return await Task.WhenAll(
         korbitSymbols.Keys
             .Where(symbol => symbol != targetCoin)
             .Select(async intermediateCoin => (
                 symbol: intermediateCoin,
-                amount: await getTargetCoinAmount(money, intermediateCoin, targetCoin, korbitPrices[intermediateCoin])
+                amount: await getTargetCoinAmount(
+                    money, intermediateCoin, targetCoin, korbitPrices[intermediateCoin], sideShiftRates[intermediateCoin]
+                )
             ))
     ).ContinueWith(
         t => t.Result.OrderByDescending(
@@ -210,7 +230,11 @@ printAvailableCoins();
 
 // Coin you want to acquire at the end of all conversions
 Console.Write("Please enter coin name (default: BTC): ");
-var targetCoin = Console.ReadLine().ToUpper();
+var targetCoin = Console.ReadLine();
+
+if (targetCoin is not null)
+    targetCoin = targetCoin.ToUpper();
+
 if (string.IsNullOrEmpty(targetCoin))
     targetCoin = "BTC";
 
