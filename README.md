@@ -108,13 +108,14 @@ There are not many coins available in the app, the reasons for that are withdraw
 
 This coin is basically the reason why this tool was create in the first place, it has unreasonable high withdrawal fees. That's why this coin is selected by default.
 
-- BCH
+- BTC
 
 These coins are good as intermediate coins for conversion. They have quite a low withdrawal fee.
 
 - ADA
 - AVAX
 - AXS
+- BCH
 - COMP
 - DOGE
 - FTM
