@@ -33,8 +33,14 @@ void printHorizontalLine()
     Console.WriteLine(new string('-', Console.WindowWidth - 1));
 }
 
+// Print program name and version
+printHorizontalLine();
+var assemblyName = System.Reflection.Assembly.GetEntryAssembly()!.GetName();
+Console.WriteLine($"{assemblyName.Name} v{assemblyName.Version}");
+printHorizontalLine();
+
 // Input amount of Korean Won you want to convert to crypto
-Console.Write($"Please enter amount of money you are spending in KRW (default: {DefaultConversionAmount:N0} KRW): ");
+Console.Write($"\nPlease enter amount of money you are spending in KRW (default: {DefaultConversionAmount:N0} KRW): ");
 var moneyStr = Console.ReadLine();
 var money = !string.IsNullOrEmpty(moneyStr) ? decimal.Parse(moneyStr, NumberStyles.Any) : DefaultConversionAmount;
 
