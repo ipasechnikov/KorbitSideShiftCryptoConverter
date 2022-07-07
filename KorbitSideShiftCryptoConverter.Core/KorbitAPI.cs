@@ -2,7 +2,7 @@
 
 using Newtonsoft.Json;
 
-namespace KorbitSideShiftCryptoConverter.Common
+namespace KorbitSideShiftCryptoConverter.Core
 {
     public class KorbitAPI
     {

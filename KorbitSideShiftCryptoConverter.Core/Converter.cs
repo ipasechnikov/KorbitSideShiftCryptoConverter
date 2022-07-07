@@ -1,4 +1,4 @@
-﻿namespace KorbitSideShiftCryptoConverter.Common
+﻿namespace KorbitSideShiftCryptoConverter.Core
 {
     public class Converter
     {

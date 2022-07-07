@@ -3,10 +3,10 @@
 using System.Diagnostics;
 using System.Globalization;
 
-using KorbitSideShiftCryptoConverter.Common;
+using KorbitSideShiftCryptoConverter.Core;
 
 // How many milliseconds wait till next conversion
-const int ConversionFrequencyMilliseconds = 10000;
+const int ConversionFrequencyMilliseconds = 10_000;
 
 // How much of KRW to convert
 const decimal DefaultConversionAmount = 200_000;
@@ -23,7 +23,8 @@ Converter converter = new(korbitApi, sideShiftApi);
 
 // Check that both exchanges have same symbols available
 Trace.Assert(
-    korbitApi.Symbols.ToHashSet().SequenceEqual(sideShiftApi.Symbols.ToHashSet())
+    korbitApi.Symbols.ToHashSet().SequenceEqual(sideShiftApi.Symbols.ToHashSet()),
+    "Korbit and SideShift have different symbols"
 );
 
 void printHorizontalLine()
@@ -36,6 +37,11 @@ void printHorizontalLine()
 Console.Write($"Please enter amount of money you are spending in KRW (default: {DefaultConversionAmount:N0} KRW): ");
 var moneyStr = Console.ReadLine();
 var money = !string.IsNullOrEmpty(moneyStr) ? decimal.Parse(moneyStr, NumberStyles.Any) : DefaultConversionAmount;
+
+// Remove decimal part. You cannot send fraction of a won to the exchange
+money = decimal.Floor(money);
+
+Trace.Assert(money > 0, "Amount of money must be greater than 0");
 
 // Print available coins
 var availableCoinsStr = string.Join(", ", korbitApi.Symbols.OrderBy(s => s));
@@ -55,9 +61,11 @@ if (string.IsNullOrEmpty(settleCoinStr))
 else
     settleCoin = Enum.Parse<Symbol>(settleCoinStr.ToUpper());
 
-Trace.Assert(sideShiftApi.Symbols.Contains(settleCoin));
-Trace.Assert(korbitApi.Symbols.Contains(settleCoin));
+// Ensure that both exchanges have settle coin available
+Trace.Assert(korbitApi.Symbols.Contains(settleCoin), $"Settle coin {settleCoin} is not available at Korbit");
+Trace.Assert(sideShiftApi.Symbols.Contains(settleCoin), $"Settle coin {settleCoin} is not available at SideShift");
 
+// Intermediate coins that you buy only to exchange for settle coin
 var depositCoins = korbitApi.Symbols.Except(new[] { settleCoin });
 
 Console.WriteLine("\nStarting conversion loop...\n");
@@ -65,8 +73,7 @@ Console.WriteLine("\nStarting conversion loop...\n");
 // Infinite loop until Ctrl+C is pressed
 for (var i = 1; ; i++)
 {
-    var delayTask = Task.Delay(ConversionFrequencyMilliseconds);
-
+    // Get prices and rates in parallel
     var korbitPricesTask = korbitApi.GetPrices();
     var sideShiftRatesTask = sideShiftApi.GetRates(settleCoin);
     Task.WaitAll(korbitPricesTask, sideShiftRatesTask);
@@ -90,12 +97,13 @@ for (var i = 1; ; i++)
     Console.WriteLine($"Directly from Korbit (send to wallet) KRW -> {settleCoin} : {korbitExchangeWithdrawl} {settleCoin}");
     Console.WriteLine($"Directly from Korbit (keep on Korbit) KRW -> {settleCoin} : {korbitExchangeKeep} {settleCoin}\n");
 
-    // Print prices if you withdraw and convert on sideshift.ai
-    Console.WriteLine("sideshift.io");
-
+    // Convert each deposit coin to settle coin and order by amount of settle coin you get
     var finalAmounts = converter
         .Convert(money, depositCoins, settleCoin, korbitPrices, sideShiftRates)
         .OrderByDescending(kvp => kvp.coinAmount);
+
+    // Print each conversion
+    Console.WriteLine("sideshift.io");
 
     foreach ((var symbol, var amount) in finalAmounts)
     {
@@ -113,7 +121,7 @@ for (var i = 1; ; i++)
     // Print footer
     printHorizontalLine();
 
-    // Wait for next iteration
+    // Wait for next iteration to reduce load on public APIs
     Console.WriteLine($"Waiting {ConversionFrequencyMilliseconds / 1000.0:N1} sec for next conversion...\n");
-    await delayTask;
+    await Task.Delay(ConversionFrequencyMilliseconds);
 }
