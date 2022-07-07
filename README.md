@@ -1,6 +1,6 @@
 # KorbitSideShiftCryptoConverter
 
-[![.NET](https://github.com/ipasechnikov/KorbitSideShiftCryptoConverter/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ipasechnikov/KorbitSideShiftCryptoConverter/actions/workflows/dotnet.yml)
+[![cmd](https://github.com/ipasechnikov/KorbitSideShiftCryptoConverter/actions/workflows/cmd.yml/badge.svg)](https://github.com/ipasechnikov/KorbitSideShiftCryptoConverter/actions/workflows/cmd.yml)
 
 A small console application to help you find best conversion rates for your crypto bought on [Korbit](https://www.korbit.co.kr/) exchange and convert it through [sideshift.ai](https://sideshift.ai/) exchange.
 
