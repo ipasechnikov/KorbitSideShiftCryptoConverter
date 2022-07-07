@@ -27,7 +27,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	  <ProjectReference Include="..\KorbitSideShiftCryptoConverter.Core\KorbitSideShiftCryptoConverter.Core.csproj" />
 	</ItemGroup>
 
 </Project>
