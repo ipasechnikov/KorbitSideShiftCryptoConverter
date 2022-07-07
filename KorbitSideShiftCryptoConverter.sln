@@ -12,7 +12,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KorbitSideShiftCryptoConverter.Core", "KorbitSideShiftCryptoConverter.Core\KorbitSideShiftCryptoConverter.Core.csproj", "{B4C67DB4-2667-4A81-94C7-A3BC57D48491}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KorbitSideShiftCryptoConverter.Core", "KorbitSideShiftCryptoConverter.Core\KorbitSideShiftCryptoConverter.Core.csproj", "{B4C67DB4-2667-4A81-94C7-A3BC57D48491}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KorbitSideShiftCryptoConverter.Web", "KorbitSideShiftCryptoConverter.Web\KorbitSideShiftCryptoConverter.Web.csproj", "{19DBC484-2233-45CF-95B4-191EDB6E6587}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,6 +30,10 @@ Global
 		{B4C67DB4-2667-4A81-94C7-A3BC57D48491}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4C67DB4-2667-4A81-94C7-A3BC57D48491}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4C67DB4-2667-4A81-94C7-A3BC57D48491}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19DBC484-2233-45CF-95B4-191EDB6E6587}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19DBC484-2233-45CF-95B4-191EDB6E6587}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19DBC484-2233-45CF-95B4-191EDB6E6587}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19DBC484-2233-45CF-95B4-191EDB6E6587}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

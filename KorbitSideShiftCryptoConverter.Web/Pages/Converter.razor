@@ -1,0 +1,201 @@
+﻿@page "/converter"
+@implements IDisposable
+
+@using KorbitSideShiftCryptoConverter.Core
+@using System.Timers
+@using System.Diagnostics
+
+<h3>Converter</h3>
+
+<div>
+    <input type="number" min="0" max="@decimal.MaxValue"  @bind="Money" @bind:event="oninput"/>
+</div>
+
+<select @bind="SettleCoin">
+    @foreach (var symbol in Enum.GetValues<Symbol>())
+    {
+        <option value="@symbol">@symbol</option>
+    }
+</select>
+
+<table class="table">
+    <tbody>
+        <tr>
+            <th>Keep</th>
+            <td>@korbitKeepCoinAmount.ToString("N10")</td>
+        </tr>
+        <tr>
+            <th>Send</th>
+            <td>@korbitWithdrawalCoinAmount.ToString("N10")</td>
+        </tr>
+    </tbody>
+</table>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Deposit Coin</th>
+            <th>Amount</th>
+            <th>Diff Keep (@SettleCoin)</th>
+            <th>Diff Keep (KRW)</th>
+            <th>Diff Send (@SettleCoin)</th>
+            <th>Diff Send (KRW)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var conversion in conversions)
+        {
+            <tr>
+                <td>@conversion.depositCoin</td>
+                <td align="right">@conversion.depositCoinAmount.ToString("N10")</td>
+                <td align="right">@(getDiffKeepCoin(conversion.depositCoinAmount).ToString("N10"))</td>
+                <td align="right">@(getDiffKeepFiat(conversion.depositCoinAmount).ToString("N0"))</td>
+                <td align="right">@(getDiffSendCoin(conversion.depositCoinAmount).ToString("N10"))</td>
+                <td align="right">@(getDiffSendFiat(conversion.depositCoinAmount).ToString("N0"))</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private readonly HttpClient httpClient;
+    private readonly KorbitAPI korbitApi;
+    private readonly SideShiftAPI sideShiftApi;
+    private readonly KorbitSideShiftCryptoConverter.Core.Converter converter;
+
+    // Timer to request exchange rates periodically
+    private readonly System.Timers.Timer timer;
+    private readonly double timerInterval = 10_000;
+
+    // Cached prices and rates
+    private static IDictionary<Symbol, decimal> korbitPrices = null!;
+    private static IDictionary<Symbol, decimal> sideShiftRates = null!;
+
+    private decimal money = 200_000;
+    private Symbol settleCoin = Symbol.BTC;
+
+    private static List<(Symbol depositCoin, decimal depositCoinAmount)> conversions = new();
+    private static decimal korbitKeepCoinAmount = 0;
+    private static decimal korbitWithdrawalCoinAmount = 0;
+
+    public Converter()
+    {
+        httpClient = new();
+        korbitApi = new(httpClient);
+        sideShiftApi = new(httpClient);
+        converter = new(korbitApi, sideShiftApi);
+
+        timer = new();
+        timer.Elapsed += timer_Elapsed;
+        timer.Interval = timerInterval;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await updateConversionRates();
+        await updateConversions();
+        timer.Start();
+    }
+
+    private async void timer_Elapsed(object? sender, ElapsedEventArgs e)
+    {
+        await updateConversionRates();
+        await updateConversions();
+    }
+
+    private decimal Money
+    {
+        get => money;
+        set
+        {
+            money = value;
+            updateConversions().Wait();
+        }
+    }
+
+    private Symbol SettleCoin
+    {
+        get => settleCoin;
+        set
+        {
+            settleCoin = value;
+            timer.Stop();
+            conversions.Clear();
+            korbitKeepCoinAmount = 0;
+            korbitWithdrawalCoinAmount = 0;
+            updateConversionRates()
+                .ContinueWith((_) => updateConversions())
+                .ContinueWith((_) => timer.Start());
+        }
+    }
+
+    private async Task updateConversionRates()
+    {
+        var korbitPricesTask = korbitApi.GetPrices();
+        var sideShiftRatesTask = sideShiftApi.GetRates(SettleCoin);
+        await Task.WhenAll(korbitPricesTask, sideShiftRatesTask);
+
+        korbitPrices = korbitPricesTask.Result;
+        sideShiftRates = sideShiftRatesTask.Result;
+    }
+
+    private async Task updateConversions()
+    {
+        if (korbitPrices is null || sideShiftRates is null)
+            return;
+
+        Trace.Assert(korbitPrices.ContainsKey(settleCoin));
+
+        korbitKeepCoinAmount = Money / korbitPrices[settleCoin];
+        korbitWithdrawalCoinAmount = korbitKeepCoinAmount  - korbitApi.WithdrawalFees[settleCoin];
+
+        var conversionsUpdated = (
+            converter.Convert(
+                Money,
+                Enum.GetValues<Symbol>().Except(new Symbol[] { settleCoin }),
+                settleCoin,
+                korbitPrices,
+                sideShiftRates
+            )
+        ).OrderByDescending(kvp => kvp.coinAmount);
+        conversions.Clear();
+        conversions.AddRange(conversionsUpdated);
+
+        await InvokeAsync(() => StateHasChanged());   
+    }
+
+    private decimal getDiffKeepCoin(decimal coinAmount)
+    {
+        return coinAmount - korbitKeepCoinAmount;
+    }
+
+    private decimal getDiffSendCoin(decimal coinAmount)
+    {
+        return coinAmount - korbitWithdrawalCoinAmount;
+    }
+
+    private decimal getDiffKeepFiat(decimal coinAmount)
+    {
+        if (korbitPrices is null || !korbitPrices.TryGetValue(settleCoin, out var settleCoinPrice))
+            return 0;
+
+        return getDiffKeepCoin(coinAmount) * settleCoinPrice;
+    }
+
+    private decimal getDiffSendFiat(decimal coinAmount)
+    {
+        if (korbitPrices is null || !korbitPrices.TryGetValue(settleCoin, out var settleCoinPrice))
+            return 0;
+
+        return getDiffSendCoin(coinAmount) * settleCoinPrice;
+    }
+
+    void IDisposable.Dispose()
+    {
+        if (timer is not null)
+        {
+            timer.Elapsed -= timer_Elapsed;
+            timer.Dispose();
+        }
+    }
+}
