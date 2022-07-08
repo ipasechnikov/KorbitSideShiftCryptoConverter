@@ -2,6 +2,6 @@
 {
     public enum Symbol
     {
-        ADA, AVAX, AXS, BCH, BTC, COMP, DAI, DOGE, MATIC, SHIB, SOL, USDC, XLM, XRP, YFI
+        ADA, AVAX, AXS, BCH, BTC, COMP, DAI, DOGE, SHIB, SOL, USDC, XLM, XRP, YFI
     }
 }

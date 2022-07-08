@@ -20,7 +20,6 @@ namespace KorbitSideShiftCryptoConverter.Core
             { Symbol.COMP, "comp-ethereum" },
             { Symbol.DAI, "dai-ethereum" },
             { Symbol.DOGE, "doge-doge" },
-            { Symbol.MATIC, "matic-ethereum" },
             { Symbol.SHIB, "shib-ethereum" },
             { Symbol.SOL, "sol-sol" },
             { Symbol.USDC, "usdc-ethereum" },

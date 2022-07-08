@@ -118,7 +118,6 @@ These coins are good as intermediate coins for conversion. They have quite a low
 - BCH
 - COMP
 - DOGE
-- MATIC
 - SHIB
 - SOL
 - XLM
