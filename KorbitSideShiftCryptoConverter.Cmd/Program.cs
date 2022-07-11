@@ -24,7 +24,7 @@ Converter converter = new(korbitApi, sideShiftApi);
 // Check that both exchanges have same symbols available
 Trace.Assert(
     korbitApi.Symbols.ToHashSet().SequenceEqual(sideShiftApi.Symbols.ToHashSet()),
-    "Korbit and SideShift have different symbols"
+    "Korbit and SideShift have different symbols available"
 );
 
 void printHorizontalLine()
@@ -92,16 +92,19 @@ for (var i = 1; ; i++)
     Console.WriteLine($"Conversion #{i} ({DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")})");
     printHorizontalLine();
 
-    Console.WriteLine($"Converting {money:N0} KRW into {settleCoin}\n");
+    Console.WriteLine($"Converting {money:N0} KRW into {settleCoin}");
+    Console.WriteLine();
 
     // Print price if you buy your coin directly from Korbit
     var korbitPrice = korbitPrices[settleCoin];
     var korbitFee = korbitApi.WithdrawalFees[settleCoin];
     var korbitExchangeKeep = money / korbitPrice;
-    var korbitExchangeWithdrawl = korbitExchangeKeep - korbitFee;
+    var korbitExchangeSend = korbitExchangeKeep - korbitFee;
 
-    Console.WriteLine($"Directly from Korbit (send to wallet) KRW -> {settleCoin} : {korbitExchangeWithdrawl} {settleCoin}");
-    Console.WriteLine($"Directly from Korbit (keep on Korbit) KRW -> {settleCoin} : {korbitExchangeKeep} {settleCoin}\n");
+    Console.WriteLine("korbit.co.kr");
+    Console.WriteLine($"Keep on Korbit: KRW -> {settleCoin} : {korbitExchangeKeep:N10} {settleCoin}");
+    Console.WriteLine($"Send to wallet: KRW -> {settleCoin} : {korbitExchangeSend:N10} {settleCoin}");
+    Console.WriteLine();
 
     // Convert each deposit coin to settle coin and order by amount of settle coin you get
     var finalAmounts = converter
@@ -116,18 +119,19 @@ for (var i = 1; ; i++)
         var coinDiff = amount - korbitExchangeKeep;
         var krwDiff = coinDiff * korbitPrice;
 
-        Console.WriteLine($"KRW -> {symbol,5} -> {settleCoin} : {amount} {settleCoin} (diff with Korbit: {krwDiff,7:N0} KRW)");
+        Console.WriteLine($"KRW -> {symbol,5} -> {settleCoin} : {amount:N10} {settleCoin} (diff with send to wallet: {krwDiff,7:N0} KRW)");
     }
 
     // Print best coin and how much of target coin you'll get if you convert through this coin
     printHorizontalLine();
     var best = finalAmounts.First();
-    Console.WriteLine($"Best value: {best.depositCoin} -> {best.coinAmount} {settleCoin}");
+    Console.WriteLine($"Best value: {best.depositCoin} -> {best.coinAmount:N10} {settleCoin}");
 
     // Print footer
     printHorizontalLine();
 
     // Wait for next iteration to reduce load on public APIs
-    Console.WriteLine($"Waiting {ConversionFrequencyMilliseconds / 1000.0:N1} sec for next conversion...\n");
-    await Task.Delay(ConversionFrequencyMilliseconds);
+    Console.WriteLine($"Waiting {ConversionFrequencyMilliseconds / 1000.0:N1} sec for next conversion...");
+    Console.WriteLine();
+    Task.Delay(ConversionFrequencyMilliseconds).Wait();
 }
