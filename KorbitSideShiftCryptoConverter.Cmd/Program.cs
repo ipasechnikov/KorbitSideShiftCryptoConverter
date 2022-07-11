@@ -119,7 +119,7 @@ for (var i = 1; ; i++)
         var coinDiff = amount - korbitExchangeKeep;
         var krwDiff = coinDiff * korbitPrice;
 
-        Console.WriteLine($"KRW -> {symbol,5} -> {settleCoin} : {amount:N10} {settleCoin} (diff with send to wallet: {krwDiff,7:N0} KRW)");
+        Console.WriteLine($"KRW -> {symbol,5} -> {settleCoin} : {amount:N10} {settleCoin} (diff with keeping on Korbit: {krwDiff,7:N0} KRW)");
     }
 
     // Print best coin and how much of target coin you'll get if you convert through this coin
