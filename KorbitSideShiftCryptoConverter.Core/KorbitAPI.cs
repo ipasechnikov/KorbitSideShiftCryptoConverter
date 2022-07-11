@@ -14,16 +14,13 @@ namespace KorbitSideShiftCryptoConverter.Core
         {
             { Symbol.ADA, "ada_krw" },
             { Symbol.AVAX, "avax_krw" },
-            { Symbol.AXS, "axs_krw" },
             { Symbol.BCH, "bch_krw" },
             { Symbol.BTC, "btc_krw" },
-            { Symbol.COMP, "comp_krw" },
             { Symbol.DAI, "dai_krw" },
             { Symbol.SOL, "sol_krw" },
             { Symbol.USDC, "usdc_krw" },
             { Symbol.XLM, "xlm_krw" },
             { Symbol.XRP, "xrp_krw" },
-            { Symbol.YFI, "yfi_krw" },
         };
 
         public KorbitAPI(HttpClient httpClient)
@@ -42,16 +39,13 @@ namespace KorbitSideShiftCryptoConverter.Core
         {
             { Symbol.ADA, 0.5m },
             { Symbol.AVAX, 0.01m },
-            { Symbol.AXS, 0.7m },
             { Symbol.BCH, 0.001m },
             { Symbol.BTC, 0.001m },
-            { Symbol.COMP, 0.07m },
             { Symbol.DAI, 20m },
             { Symbol.SOL, 0.01m },
             { Symbol.USDC, 28m },
             { Symbol.XLM, 0.01m },
             { Symbol.XRP, 1m },
-            { Symbol.YFI, 0.001m },
         };
 
         public async Task<IDictionary<Symbol, decimal>> GetPrices()

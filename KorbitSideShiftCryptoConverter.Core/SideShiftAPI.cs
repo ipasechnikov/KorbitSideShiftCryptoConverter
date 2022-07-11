@@ -14,16 +14,13 @@ namespace KorbitSideShiftCryptoConverter.Core
         {
             { Symbol.ADA, "ada-ada" },
             { Symbol.AVAX, "avax-avax" },
-            { Symbol.AXS, "axs-ethereum" },
             { Symbol.BCH, "bch-bch" },
             { Symbol.BTC, "btc-btc" },
-            { Symbol.COMP, "comp-ethereum" },
             { Symbol.DAI, "dai-ethereum" },
             { Symbol.SOL, "sol-sol" },
             { Symbol.USDC, "usdc-ethereum" },
             { Symbol.XLM, "xlm-xlm" },
             { Symbol.XRP, "xrp-xrp" },
-            { Symbol.YFI, "yfi-ethereum" },
         };
 
         public SideShiftAPI(HttpClient httpClient)
