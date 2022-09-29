@@ -13,10 +13,10 @@ namespace KorbitSideShiftCryptoConverter.Core
         private readonly IDictionary<Symbol, string> _coins = new Dictionary<Symbol, string>()
         {
             { Symbol.ADA, "ada-ada" },
-            { Symbol.AVAX, "avax-avax" },
             { Symbol.BCH, "bch-bch" },
             { Symbol.BTC, "btc-btc" },
             { Symbol.DAI, "dai-ethereum" },
+            { Symbol.ETH, "eth-ethereum" },
             { Symbol.SOL, "sol-sol" },
             { Symbol.USDC, "usdc-ethereum" },
             { Symbol.XLM, "xlm-xlm" },

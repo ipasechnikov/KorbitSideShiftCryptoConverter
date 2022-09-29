@@ -13,10 +13,10 @@ namespace KorbitSideShiftCryptoConverter.Core
         private readonly IDictionary<Symbol, string> _currencyPairs = new Dictionary<Symbol, string>()
         {
             { Symbol.ADA, "ada_krw" },
-            { Symbol.AVAX, "avax_krw" },
             { Symbol.BCH, "bch_krw" },
             { Symbol.BTC, "btc_krw" },
             { Symbol.DAI, "dai_krw" },
+            { Symbol.ETH, "eth_krw" },
             { Symbol.SOL, "sol_krw" },
             { Symbol.USDC, "usdc_krw" },
             { Symbol.XLM, "xlm_krw" },
@@ -38,10 +38,10 @@ namespace KorbitSideShiftCryptoConverter.Core
         public IDictionary<Symbol, decimal> WithdrawalFees { get; } = new Dictionary<Symbol, decimal>()
         {
             { Symbol.ADA, 0.5m },
-            { Symbol.AVAX, 0.01m },
             { Symbol.BCH, 0.001m },
             { Symbol.BTC, 0.001m },
             { Symbol.DAI, 20m },
+            { Symbol.ETH, 0.009m },
             { Symbol.SOL, 0.01m },
             { Symbol.USDC, 28m },
             { Symbol.XLM, 0.01m },
