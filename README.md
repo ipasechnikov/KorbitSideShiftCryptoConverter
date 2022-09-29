@@ -106,23 +106,18 @@ There are not many coins available in the app, the reasons for that are withdraw
 - sideshift.ai has quite a restricted list of support coins
 - There are quite a few coins that have reasonable withdrawal fees
 
-This coin is basically the reason why this tool was create in the first place, it has unreasonable high withdrawal fees. That's why this coin is selected by default.
+These coins are basically the reason why this tool was create in the first place, they have unreasonable high withdrawal fees.
 
-- BTC
+- BTC (default)
+- ETH
 
 These coins are good as intermediate coins for conversion. They have quite a low withdrawal fee.
 
 - ADA
-- AVAX
-- AXS
 - BCH
-- COMP
-- DOGE
-- SHIB
 - SOL
 - XLM
 - XRP
-- YFI
 
 These 2 stablecoins are not reasonable for now, but if the price of other coins goes up, stablecoin can provide lesser fees.
 
