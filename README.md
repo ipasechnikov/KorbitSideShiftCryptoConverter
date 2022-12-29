@@ -26,7 +26,7 @@ Just in case if someone is worried, this app doesn't collect any data, it cannot
 
 ## ⚠️ Disclaimer
 
-**I don't advise to buy or invest in crypto. I'm not a financial advisor. And for God's sake, please don't think that this app is supposed to make you rich or something. It's just a simple conversion tool that tries to minimize withdrawal fees for your crypto. It might be not the most accurate tool and there might be bugs. Double check actual conversion rates on exchanges.**
+**I don't advise to buy or invest in crypto. I'm not a financial advisor. It's just a simple conversion tool that tries to minimize withdrawal fees for your crypto. It might be not the most accurate tool and there might be bugs. Fees are hardcoded and might be outdated. Double check actual conversion rates and fees on exchanges.**
 
 **USE IT ON YOUR OWN RISK!**
 
@@ -35,12 +35,12 @@ Just in case if someone is worried, this app doesn't collect any data, it cannot
 Just a small introduction why this tool was created.
 
 [Korbit](https://www.korbit.co.kr/) exchange has quite high fees when you withdraw crypto, especially for BTC.
-To withdraw BTC you have to pay 0.001 BTC (as for 2022-07-01). And we all want to withdraw our crypto from exchange as quickly as possible. Because as you know **not your keys not your coins**. But paying 0.001 BTC every time you try to move 0.005 BTC is quite a hit, basically 20% fee, oof that hurts.
+To withdraw BTC you have to pay 0.001 BTC (as for 2022-07-01). But paying 0.001 BTC every time you try to move 0.005 BTC is quite a hit, basically 20% fee.
 
 That's why I've been investigating how to get my coins off the exchange with as small loss as possible.
 I found out that if you buy other *intermediate* coin that will be used for conversion purpose only and sell it on [sideshift.ai](https://sideshift.ai/), you can minimize your loss.
 
-You don't keep this *intermediate* coin. You buy it, withdraw from Korbit and sell it on sideshift.ai for your target coin moving it to your wallet.
+You don't keep this *intermediate* coin. You buy it, withdraw from Korbit and sell it on sideshift.ai for your target coin and move it to your wallet.
 
 ### Why Korbit as main exchange
 
@@ -49,21 +49,12 @@ The thing is, all these exchanges are not available in South Korea, you can only
 
 ### Why sideshift.ai as exchange for conversion
 
-As it was said, there isn't much choice in South Korea when it comes to crypto exchanges.
-I guess you can try and use something like Kraken and transfer you coins there, then convert them and withdraw from Kraken, but to send to
-Kraken you have to abide Korbit Travel Rule and wait for Kraken account approval on Korbit account.
-
-You also have to follow Travel Rule for your own wallets, but applying for screening for wallets are more straightforward in my opinion.
-
-sideshift.ai is quite easy to use and has no KYC (Know You Customer) policy.
-
+sideshift.ai is quite easy to use, has decent fees and has no KYC (Know You Customer) policy.
 There are other exchanges that have no KYC policy, but they seem to have higher fees.
 
 ## Preview
 
-That's what you get. Not bad, huh?
-
-![2022-07-01 12_05_30-Windows PowerShell](https://user-images.githubusercontent.com/17357759/176815654-c4b288f4-5e81-4fa2-934b-ca4dcd727734.png)
+![2022-12-29 12_37_28-Windows PowerShell](https://user-images.githubusercontent.com/17357759/209900226-b6248219-f52f-4a4d-a682-e42939c4aba1.png)
 
 ## Getting started
 
@@ -88,23 +79,23 @@ dotnet build
 
 ### Running
 
-Running process can't get any simpler than this:
+Running the program can't get any simpler than this:
 
 1. Input how much money in KRW you want to spend on your crypto. That's the money that you buy crypto on Korbit with. You can format it with commas for example `1,000,000` or `1,000,000,000`.
 2. Select your target crypto. That's the crypto you want to convert to and put it in your wallet at the end of the process.
 
-Or you can skip input for both of these values and use default value by pressing Enter.
+Or you can skip input for both of these values and use default values by pressing Enter.
 
 After you inputted all the data the app will start to convert your money in a loop with a frequency interval of 10 seconds. It will request current exchange rates from Korbit and sideshift.ai via their public APIs and print a table showing how much of your target coin you'll get in case you convert though one or another coin.
 
-There are not much underlying checks going on. In case of bad user input data, app will simply crash. To stop an app you can press Ctrl+C. It's wild, I know.
+There are not much data checks going on. In case of bad user input data, app will simply crash. To stop an app you can press Ctrl+C.
 
 ### Available coins
 
 There are not many coins available in the app, the reasons for that are withdrawal fees and availability on both exchanges.
 
 - sideshift.ai has quite a restricted list of support coins
-- There are quite a few coins that have reasonable withdrawal fees
+- There are not many coins that have reasonable withdrawal fees
 
 These coins are basically the reason why this tool was create in the first place, they have unreasonable high withdrawal fees.
 
@@ -131,8 +122,6 @@ You can freely modify the code and add your own coins, change fees, etc. You can
 ## Contributing
 
 I don't think that this project is good for contributing, but if you have any idea, proposal or issues, please open an issue or create a pull request.
-
-It shouldn't be much of an issue to understand most of the code, but if you have any problems, please open an issue or create a pull request.
 
 Code quality probably is not the best. It's a small project written in a few hours in my free time. It utilizes a .NET 6 [new console app template](https://aka.ms/new-console-template), so Program.cs file looks like some scripting language.
 
