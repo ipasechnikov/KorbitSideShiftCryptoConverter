@@ -28,7 +28,7 @@ Just in case if someone is worried, this app doesn't collect any data, it cannot
 
 **I don't advise to buy or invest in crypto. I'm not a financial advisor. It's just a simple conversion tool that tries to minimize withdrawal fees for your crypto. It might be not the most accurate tool and there might be bugs. Fees are hardcoded and might be outdated. Double check actual conversion rates and fees on exchanges.**
 
-**USE IT ON YOUR OWN RISK!**
+**USE IT AT YOUR OWN RISK!**
 
 ## Foreword
 
