@@ -2,6 +2,18 @@
 
 [![cmd](https://github.com/ipasechnikov/KorbitSideShiftCryptoConverter/actions/workflows/cmd.yml/badge.svg)](https://github.com/ipasechnikov/KorbitSideShiftCryptoConverter/actions/workflows/cmd.yml)
 
+## ⚠️ Project is deprecated
+
+As of 2023-12-09, it is recommended to use cryptocurrencies with low transaction fees such as XLM, XRP, SOL, etc
+(or whatever coin is still alive and has low fees by the time you read this note) to send your funds between exchanges cheaply and quickly.
+
+My personal recommendation at the time of writing this note is XLM. Fees for XLM are pretty much non-existent, even if you withdraw from exchanges.
+
+There is no need to use this tool anymore. I created it when I was just starting using cryptocurrencies and wanted to make sure that I get the lowest possible fees.
+Lately I just buy XLM on my local exchange and move it virtually for free to other exchanges in no time to swap to other coins.
+
+---
+
 A small console application to help you find best conversion rates for your crypto bought on [Korbit](https://www.korbit.co.kr/) exchange and convert it through [sideshift.ai](https://sideshift.ai/) exchange.
 
 Just in case if someone is worried, this app doesn't collect any data, it cannot use your money to buy or sell any crypto. It simply converts KRW into target crypto with a help of intermediate crypto. Nothing more, nothing less.
@@ -9,6 +21,7 @@ Just in case if someone is worried, this app doesn't collect any data, it cannot
 ## Table of Contents
 
 - [KorbitSideShiftCryptoConverter](#korbitsideshiftcryptoconverter)
+  - [⚠️ Project is deprecated](#️-project-is-deprecated)
   - [Table of Contents](#table-of-contents)
   - [⚠️ Disclaimer](#️-disclaimer)
   - [Foreword](#foreword)
